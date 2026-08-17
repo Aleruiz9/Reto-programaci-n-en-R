@@ -1,1 +1,1 @@
-# Reto-programaci-n-en-R
+# Reto-programación-en-R
