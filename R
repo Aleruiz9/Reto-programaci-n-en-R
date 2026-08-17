@@ -1,0 +1,106 @@
+# ==============================================================================
+# Proyecto: Data Analytics training - Reto proyecto
+# Archivo: procesar_numeros.R
+# Objetivo: Procesamiento estadístico de números enteros, uso de la familia
+#           apply, control de flujo y manejo de ficheros en R.
+# ==============================================================================
+
+# 1. Función personalizada para la lectura de datos con control de errores
+leer_numeros <- function(nombre_fichero) {
+  # Verificación condicional de la existencia del archivo
+  if (!file.exists(nombre_fichero)) {
+    stop(paste("Error: El archivo", nombre_fichero, "no existe. Deteniendo la ejecución."))
+  }
+  
+  # Lectura del fichero línea por línea y conversión a vector numérico entero
+  lineas <- readLines(nombre_fichero, warn = FALSE)
+  numeros <- as.integer(trimws(lineas))
+  
+  # Filtrar posibles valores NA generados por líneas vacías
+  numeros <- numeros[!is.na(numeros)]
+  
+  return(numeros)
+}
+
+# 2. Función personalizada para el cálculo de estadísticos descriptivos
+calcular_estadisticos <- function(vector_numeros) {
+  # Cálculos vectorizados de media, mediana y desviación estándar
+  media <- mean(vector_numeros)
+  mediana <- median(vector_numeros)
+  desviacion_std <- sd(vector_numeros)
+  
+  # Evaluación condicional de variabilidad basada en la desviación estándar
+  alta_variabilidad <- FALSE
+  if (desviacion_std > 10) {
+    mensaje_variabilidad <- "Aviso: Alta variabilidad detectada en los datos (Desviación Estándar > 10)."
+    cat(mensaje_variabilidad, "\n")
+    alta_variabilidad <- TRUE
+  } else {
+    mensaje_variabilidad <- "Variabilidad dentro del rango moderado (Desviación Estándar <= 10)."
+  }
+  
+  return(list(
+    media = media,
+    mediana = mediana,
+    desviacion_std = desviacion_std,
+    alta_variabilidad = alta_variabilidad,
+    mensaje_variabilidad = mensaje_variabilidad
+  ))
+}
+
+# 3. Función personalizada para calcular potencias usando la familia apply
+calcular_cuadrados <- function(vector_numeros) {
+  # Uso de sapply para calcular de forma funcional el cuadrado de cada número
+  cuadrados <- sapply(vector_numeros, function(x) x^2)
+  return(cuadrados)
+}
+
+# 4. Función personalizada para generar y escribir el fichero de resultados
+guardar_resultados <- function(estadisticos, cuadrados, fichero_salida = "resultados.txt") {
+  # Construcción estructurada de las líneas del archivo de salida
+  lineas_salida <- c(
+    "==================================================",
+    "       INFORME DE RESULTADOS ESTADÍSTICOS        ",
+    "==================================================",
+    "",
+    "1. RESUMEN ESTADÍSTICO:",
+    paste0("   - Media: ", round(estadisticos$media, 4)),
+    paste0("   - Mediana: ", round(estadisticos$mediana, 4)),
+    paste0("   - Desviación Estándar: ", round(estadisticos$desviacion_std, 4)),
+    "",
+    "2. ANÁLISIS DE VARIABILIDAD:",
+    paste0("   - ", estadisticos$mensaje_variabilidad),
+    "",
+    "3. CUADRADOS DE LOS ELEMENTOS (vía sapply):",
+    paste0("   [", paste(cuadrados, collapse = ", "), "]"),
+    "",
+    "=================================================="
+  )
+  
+  # Escritura en disco sobrescribiendo/creando el archivo
+  writeLines(lineas_salida, con = fichero_salida)
+  cat(paste("Resultados exportados exitosamente en:", fichero_salida, "\n"))
+}
+
+# ==============================================================================
+# Pipeline principal de ejecución
+# ==============================================================================
+ejecutar_procesamiento <- function() {
+  archivo_entrada <- "numeros.txt"
+  archivo_salida <- "resultados.txt"
+  
+  # Paso 1: Carga y validación
+  vector_datos <- leer_numeros(archivo_entrada)
+  
+  # Paso 2: Cálculo estadístico y control de variabilidad
+  resultados_estadisticos <- calcular_estadisticos(vector_datos)
+  
+  # Paso 3: Transformación mediante sapply()
+  vector_cuadrados <- calcular_cuadrados(vector_datos)
+  
+  # Paso 4: Exportación de resultados a fichero
+  guardar_resultados(resultados_estadisticos, vector_cuadrados, archivo_salida)
+}
+
+# Ejecutar el flujo completo
+ejecutar_procesamiento()
